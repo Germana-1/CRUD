@@ -52,6 +52,15 @@ const isAdmMiddleware = (req, res, next) => {
   return next();
 };
 
+// const ensureUserExistsMiddleware = (req, res, next) => {
+//   const userIndex = users.findIndex((el) => el.uuid === req.params.id);
+
+//   if (userIndex === -1) {
+//     res.status(404).json({ message: "User not found" });
+//   }
+//   return next();
+// };
+
 const haveAdmPermissionMiddleware = (req, res, next) => {
   if (!req.user.isAdm && req.params.id !== req.user.id) {
     return res.status(403).json({ message: "missing admin permissions" });
@@ -101,6 +110,9 @@ const userProfileServece = (req) => {
 
 const updatedUserServece = async (req) => {
   const user = users.find((el) => el.uuid === req.params.id);
+  if (!user) {
+    return [404, { message: "User not found" }];
+  }
 
   let data = { ...req.body, updatedOn: new Date() };
   if (req.body.password) {
@@ -109,8 +121,9 @@ const updatedUserServece = async (req) => {
       password: await hash(req.body.password, 10),
     };
   }
+  console.log(user);
 
-  if (req.body.isAdm !== undefined) {
+  if (req.body.isAdm !== undefined && user) {
     data.isAdm = user.isAdm;
   }
 
@@ -123,6 +136,10 @@ const updatedUserServece = async (req) => {
 
 const deleteUserServece = (req) => {
   const userIndex = users.findIndex((el) => el.uuid === req.params.id);
+
+  if (userIndex === -1) {
+    return [404, { message: "User not found" }];
+  }
 
   users.splice(userIndex, 1);
 
